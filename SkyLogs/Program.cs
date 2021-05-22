@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 using System;
+using System.Threading;
 
 namespace SkyLogs
 {
@@ -24,9 +26,12 @@ namespace SkyLogs
                 using (servicesProvider as IDisposable)
                 {
                     var person = servicesProvider.GetRequiredService<Person>();
+                    var telemetryClient = servicesProvider.GetRequiredService<TelemetryClient>();
                     person.Name = "Sky";
                     person.Talk("Hello");
-
+                    telemetryClient.TrackEvent($"Person {person.Name} spoke");
+                    telemetryClient.Flush();
+                    Thread.Sleep(500);
                     Console.WriteLine("Press ANY key to exit");
                     Console.ReadKey();
                 }
@@ -55,6 +60,7 @@ namespace SkyLogs
                    loggingBuilder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
                    loggingBuilder.AddNLog(config);
                })
+               .AddApplicationInsightsTelemetryWorkerService("45b1a14d-6ac9-40df-bfd4-95327345f5ab")
                .BuildServiceProvider();
         }
 

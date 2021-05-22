@@ -1,7 +1,7 @@
-# Using NLog in a .NET 5 Console Application with Dependency Injection
+# Using Application Insights in a .NET 5 Console Application with Dependency Injection
 
 ## Description
-Explains how to setup NLog as logging provider for .NET 5 Console Application and Dependency Injection).
+Explains how to setup Application Insights for .NET 5 Console Application and Dependency Injection.
 
 Demonstrated with a .NET 5 Console application. Example project can also be found on [GitHub](https://github.com/iSatishYadav/net-core-console-nlog-with-di).
 
@@ -71,7 +71,7 @@ Ensure to configure your project-file to copy NLog.config to the output director
 
 ### 3. Update your program
 
-#### 3.1 Create your Person class
+#### 3.1 Create your `Person` class
 
 ```c#
 public class Person
@@ -117,7 +117,7 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 ```
-#### 3.4 Update your `Main()`
+#### 3.4 Update your `Main`
 
 First create the DI container, then get your `Person` and start running!
 
@@ -179,6 +179,108 @@ private static IServiceProvider BuildDi(IConfiguration config)
 ```
 
 
-## Configure NLog Targets for output
+### Configure NLog Targets for output
 
 Next step, see [Configure NLog with nlog.config](https://github.com/NLog/NLog/wiki/Configuration-file)
+
+## Application Insights
+
+### Add Application Insights Package
+
+Install:
+
+- The package [Microsoft.ApplicationInsights.WorkerService](https://www.nuget.org/packages/Microsoft.ApplicationInsights.WorkerService)
+
+e.g.
+
+```xml
+  <ItemGroup>    
+    <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.17.0" />
+  </ItemGroup>
+```
+
+> This package says `WorkerService` but can be used in plain Console Application as well.
+
+### Update your `Main` to add Application Insights
+- Add following line while creating `ServiceCollection` 
+
+````csharp
+.AddApplicationInsightsTelemetryWorkerService("YOUR_INSTRUMENTATION_KEY")
+````
+
+- The final code looks like this:
+
+````csharp
+private static IServiceProvider BuildDi(IConfiguration config)
+{
+    return new ServiceCollection()
+        //Add DI Classes here
+        .AddTransient<Person>() 
+        .AddLogging(loggingBuilder =>
+        {
+            // configure Logging with NLog
+            loggingBuilder.ClearProviders();
+            loggingBuilder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+            loggingBuilder.AddNLog(config);
+        })
+        .AddApplicationInsightsTelemetryWorkerService("YOUR_INSTRUMENTATION_KEY")
+        .BuildServiceProvider();
+}
+````
+
+### Use `TelemetryClient` to track events or whatever
+
+- Get the `TelemetryClient` instance:
+
+````csharp
+var telemetryClient = servicesProvider.GetRequiredService<TelemetryClient>();
+````
+- Track events
+````
+    telemetryClient.TrackEvent($"Person {person.Name} spoke");
+    telemetryClient.Flush();
+    Thread.Sleep(500);
+````
+> `Flush()` method actually sends the request to Application Insights but it's not synchronous, so calling `Thread.Sleep(500)` to make sure it completes.
+
+- Final `Main` looks something like this:
+
+````csharp
+static void Main(string[] args)
+{
+    var logger = LogManager.GetCurrentClassLogger();
+    try
+    {
+        var config = new ConfigurationBuilder()
+            .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+
+        var servicesProvider = BuildDi(config);
+
+        using (servicesProvider as IDisposable)
+        {
+            var person = servicesProvider.GetRequiredService<Person>();
+            var telemetryClient = servicesProvider.GetRequiredService<TelemetryClient>();
+            person.Name = "Sky";
+            person.Talk("Hello");
+            telemetryClient.TrackEvent($"Person {person.Name} spoke");
+            telemetryClient.Flush();
+            Thread.Sleep(500);
+            Console.WriteLine("Press ANY key to exit");
+            Console.ReadKey();
+        }
+    }
+    catch (Exception ex)
+    {
+        // NLog: catch any exception and log it.
+        logger.Error(ex, "Stopped program because of exception");
+        throw;
+    }
+    finally
+    {
+        // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
+        LogManager.Shutdown();
+    }
+}
+````
