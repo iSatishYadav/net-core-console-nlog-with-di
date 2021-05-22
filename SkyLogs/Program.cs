@@ -47,7 +47,7 @@ namespace SkyLogs
         {
             return new ServiceCollection()
                  //Add DI Classes here
-               .AddTransient<Person>() // Runner is the custom class
+               .AddTransient<Person>() 
                .AddLogging(loggingBuilder =>
                {
                    // configure Logging with NLog
