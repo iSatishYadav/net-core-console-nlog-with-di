@@ -1,4 +1,4 @@
-# .NET Core Console Application NLog with Dependency Injection
+# Using NLog in a .NET 5 Console Application with Dependency Injection
 
 ## Description
 Explains how to setup NLog as logging provider for .NET Core Console Application and Microsoft Extension Logging (MEL).
