@@ -5,6 +5,8 @@ Explains how to setup Application Insights for .NET 5 Console Application and De
 
 Demonstrated with a .NET 5 Console application. Example project can also be found on [GitHub](https://github.com/iSatishYadav/net-core-console-nlog-with-di).
 
+> If you already have a Console Application you can directly skip to [setting up Application Insights](#application-insights).  
+
 ### 0. Create a new .NET 5 console project
 
 ### 1. Add dependency in csproj manually or using NuGet
