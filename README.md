@@ -1,11 +1,11 @@
 # Using NLog in a .NET 5 Console Application with Dependency Injection
 
 ## Description
-Explains how to setup NLog as logging provider for .NET Core Console Application and Microsoft Extension Logging (MEL).
+Explains how to setup NLog as logging provider for .NET 5 Console Application and Dependency Injection).
 
-Demonstrated with a Console application. Example project can also be found on [GitHub](https://github.com/iSatishYadav/net-core-console-nlog-with-di).
+Demonstrated with a .NET 5 Console application. Example project can also be found on [GitHub](https://github.com/iSatishYadav/net-core-console-nlog-with-di).
 
-### 0. Create a new .NET Core console project
+### 0. Create a new .NET 5 console project
 
 ### 1. Add dependency in csproj manually or using NuGet
 
@@ -71,7 +71,7 @@ Ensure to configure your project-file to copy NLog.config to the output director
 
 ### 3. Update your program
 
-#### 3.1 Create your runner class
+#### 3.1 Create your Person class
 
 ```c#
 public class Person
@@ -117,7 +117,7 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 ```
-#### 3.4 Update your `main()`
+#### 3.4 Update your `Main()`
 
 First create the DI container, then get your `Person` and start running!
 
